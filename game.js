@@ -80,9 +80,9 @@ const GREEN = 0x8ac926;
 const LINE = 0x3a3a55;
 const PODIO = [0xffd400, 0xd8dee9, 0xe08a4a]; // oro, plata, bronce
 const PC = [0xff595e, 0xffca3a, 0x8ac926, 0x4cc9f0, 0xc77dff, 0xff8fd8, 0xf4a261, 0xffffff];
-const VT = [['c0', 20], ['c1', 20], ['c2', 20], ['c3', 20], ['c4', 20], ['c5', 20], ['pp', 24], ['jp', 19], ['mo', 11], ['mo', 11], ['tr', 32]];
+const VT = [['o0', 20], ['o1', 20], ['o2', 20], ['n0', 21], ['n1', 21], ['n2', 21], ['n3', 21], ['n4', 21], ['s0', 23], ['s1', 23], ['s2', 23], ['pp', 24], ['jp', 19], ['mo', 11], ['mo', 11], ['tr', 32]];
 
-let S, C, AC, MG, NB, bus, wa, wb, bsh, hg, camX = 0;
+let AVL, S, C, AC, MG, NB, bus, wa, wb, bsh, hg, camX = 0;
 const G = { ph: 'title', rank: [], time: 0, mt: 0, ms: 0, mc: 4 };
 const ents = [];
 const macs = [];
@@ -178,8 +178,48 @@ function car(k, w, col, extra) {
     ci('#111', w - 9, 13, 3);
     R('#aaa', 9, 13);
     R('#aaa', w - 9, 13);
+    R('#c9ccd2', 0, 9, 2, 2);
+    R('#c9ccd2', w - 2, 9, 2, 2);
     if (extra) extra();
   });
+}
+
+// sedán moderno: techo curvo, capó inclinado, luces finas
+function modern(k, col) {
+  mk(k, 42, 16, () => {
+    const gl = '#1b2838';
+    R(col, 2, 7, 38, 5); R(col, 1, 8, 40, 3);
+    R(col, 14, 2, 12, 1); R(col, 11, 3, 18, 1); R(col, 9, 4, 23, 1); R(col, 7, 5, 28, 2);
+    R(gl, 14, 3, 5, 1); R(gl, 12, 4, 7, 2); R(gl, 21, 3, 6, 1); R(gl, 21, 4, 9, 2);
+    R('#fff4', 3, 8, 36, 1);
+    R('#0005', 2, 11, 38, 1);
+    R('#fff', 39, 8, 2, 1); R('#e63946', 1, 8, 1, 2);
+    ci('#111', 10, 13, 3); ci('#111', 32, 13, 3);
+    R('#c9ccd2', 10, 13); R('#c9ccd2', 32, 13);
+  });
+}
+// camioneta nueva (SUV): alta, esquinas redondeadas, molduras negras
+function suv(k, col) {
+  mk(k, 46, 20, () => {
+    const gl = '#1b2838';
+    R(col, 2, 8, 42, 7); R(col, 1, 9, 44, 5);
+    R(col, 6, 2, 29, 6); R(col, 7, 1, 26, 1); R(col, 35, 5, 6, 3);
+    R('#333', 8, 0, 22, 1);
+    R(gl, 8, 3, 8, 4); R(gl, 18, 3, 8, 4); R(gl, 28, 3, 5, 4); R(gl, 33, 4, 1, 3);
+    R('#2a2a2a', 1, 13, 44, 2);
+    R('#fff', 43, 9, 2, 2); R('#e63946', 1, 9, 1, 3);
+    ci('#111', 10, 16, 4); ci('#111', 36, 16, 4);
+    ci('#c9ccd2', 10, 16, 1); ci('#c9ccd2', 36, 16, 1);
+  });
+}
+
+// perfil de los cerros de los barrios (lo usan la ciudad y sus luces)
+const P512 = (Math.PI * 2) / 512;
+const HF = (x) => 60 - 10 * Math.sin(2 * x * P512 + 0.3) - 6 * Math.sin(5 * x * P512 + 1) - 3 * Math.sin(9 * x * P512 + 2);
+// estrella con destello en cruz
+function star(x, y, c, big) {
+  R(c, x, y);
+  if (big) { R('#cfe3ff', x - 1, y); R('#cfe3ff', x + 1, y); R('#cfe3ff', x, y - 1); R('#cfe3ff', x, y + 1); }
 }
 
 function textures() {
@@ -269,7 +309,9 @@ function textures() {
   person('gn', '#c68642', '#4b5320', '#4b5320', '#111', 4); // guardia de la alcabala
 
   // tráfico
-  ['#d62828', '#277da1', '#43aa8b', '#e5e5e5', '#3a3a3a', '#f77f00'].forEach((c, i) => car('c' + i, 40, c));
+  ['#d62828', '#3a6ea5', '#6b8e23'].forEach((c, i) => car('o' + i, 40, c));
+  ['#e5e5e5', '#9aa3ad', '#1f4fbf', '#b5172e', '#26262b'].forEach((c, i) => modern('n' + i, c));
+  ['#f1f1f1', '#2b2d42', '#7f8c8d'].forEach((c, i) => suv('s' + i, c));
   car('pp', 48, '#f4f1de', () => { R(Y, 19, 0, 10, 1); R('#f77f00', 1, 8, 46, 1); }); // carrito por puesto
   mk('jp', 38, 18, () => { // Toyota "machito"
     R('#c1440e', 3, 6, 34, 8);
@@ -356,10 +398,24 @@ function textures() {
       R(k, 0, i * 19, W, 19);
       if (i) for (let y = i * 19 - 2; y < i * 19; y++) for (let x = y & 1; x < W; x += 2) R(k, x, y);
     });
-    for (let i = 0; i < 40; i++) R('#fff8', sr() * W | 0, sr() * 50 | 0);
+    for (let i = 0; i < 110; i++) R(sr() < 0.5 ? '#fff5' : '#fffa', sr() * W | 0, (sr() * sr() * 80) | 0);
+    // Cruz del Sur
+    [[70, 9, 1], [68, 31, 1], [59, 19, 1], [79, 21, 1], [73, 25, 0]].forEach(([x, y, b]) => star(x, y, '#fff', b));
     ci('#ffe29a', 300, 100, 26);
     for (let y = 104; y < 128; y += 5) R(c[y / 19 | 0], 272, y, 56, 2);
   });
+  // estrellas que titilan (dos capas en contrafase)
+  for (let f = 0; f < 2; f++) mk('sa' + f, W, 80, () => { for (let i = 0; i < 22; i++) star(sr() * W | 0, (sr() * sr() * 75) | 0, '#fff', sr() < 0.3); });
+  // montañas lejanas, azul grisáceo y morado pálido
+  [['fa', '#b3a3c4', '#c5b6d3', 34, 1.7], ['fb', '#8784ab', '#9c98bd', 42, 4.2]].forEach(([k, c, hl, b, ph]) =>
+    mk(k, 512, 70, () => {
+      for (let x = 0; x < 512; x++) {
+        const y = (b - 9 * Math.sin(x * P512 * 2 + ph) - 5 * Math.sin(x * P512 * 3 + ph * 2) - 2 * Math.sin(x * P512 * 7)) | 0;
+        R(c, x, y, 1, 70 - y);
+        R(hl, x, y);
+      }
+    }),
+  );
   mk('cl', 512, 40, () => {
     for (let i = 0; i < 6; i++) {
       const x = 30 + i * 80 + (sr() * 30 | 0);
@@ -386,12 +442,18 @@ function textures() {
     for (let i = 0; i < 6; i++) R('#8aa', mx - 2, my - 13 + i * 2, 5, 1);
     R('#ccc', mx - 4, my - 16, 9, 1);
     R('#ccc', mx, my - 21, 1, 5);
+    // antena de televisión en otro pico
+    const ax = (mx + 200) % 512, ay = f(ax) | 0;
+    for (let k = 0; k < 18; k++) R(k % 6 < 3 ? '#d62828' : '#eee', ax - (k < 8 ? 1 : 0), ay - k, k < 8 ? 3 : 1, 1);
+    R('#ccc', ax - 3, ay - 12, 2, 2);
+    AVL = [ax, ay - 19];
   });
+  mk('avl', 512, 110, () => { R('#ff3b3b', AVL[0] - 1, AVL[1], 2, 2); R('#ff3b3b55', AVL[0] - 2, AVL[1] - 1, 4, 4); });
   // barrios, Parque Central y chaguaramos
   mk('ct', 512, 96, () => {
     const P = (Math.PI * 2) / 512;
     const hc = ['#e76f51', '#f4a261', '#e9c46a', '#2a9d8f', '#e5e5e5', '#c1440e', '#8ab17d', '#d1495b', '#5e9ad6', '#f6bd60'];
-    const hf = (x) => 60 - 10 * Math.sin(2 * x * P + 0.3) - 6 * Math.sin(5 * x * P + 1) - 3 * Math.sin(9 * x * P + 2);
+    const hf = HF;
     for (let x = 0; x < 512; x++) R('#9c5b3c', x, hf(x) | 0, 1, 96);
     for (let x = 0; x < 508; x += 3 + (sr() * 4 | 0)) {
       for (let y = (hf(x) | 0) + 1; y < 96; y += 4 + (sr() * 3 | 0)) {
@@ -406,16 +468,43 @@ function textures() {
       R('#6c7a89', x, 96 - bh, bw, bh);
       for (let y = 98 - bh; y < 96; y += 3) for (let k = x + 1; k < x + bw - 1; k += 2) R(sr() < 0.35 ? '#ffd27f' : '#4a5663', k, y);
     }
-    for (const x of [300, 318]) {
-      R('#4f5d75', x, 6, 13, 90);
-      R('#4f5d75', x + 3, 1, 7, 5);
-      for (let y = 8; y < 96; y += 3) R('#8da2bd', x + 1, y, 11, 1);
+    // Torres de Parque Central: fuste nervado, corona escalonada y antena
+    for (const x of [298, 320]) {
+      R('#2f3a4c', x, 12, 15, 84);
+      for (let k = x + 1; k < x + 15; k += 3) R('#3f4d63', k, 12, 1, 84);
+      for (let y = 14; y < 96; y += 3) for (let k = x + 2; k < x + 14; k += 3) if (sr() < 0.25) R('#ffd27f', k, y);
+      R('#2f3a4c', x + 2, 8, 11, 4);
+      R('#2f3a4c', x + 5, 5, 5, 3);
+      R('#8da2bd', x, 12, 15, 1);
+      R('#999', x + 7, 0, 1, 5);
+      R('#ff3b3b', x + 7, 0);
     }
     for (let i = 0; i < 7; i++) {
       const x = 10 + (sr() * 490 | 0), ty = 58 + (sr() * 10 | 0), gr = '#2d6a4f';
       R('#cfc6b0', x, ty, 1, 96 - ty);
       R(gr, x - 4, ty, 9, 1); R(gr, x - 2, ty - 1, 5, 1); R(gr, x - 6, ty + 1, 3, 1); R(gr, x + 4, ty + 1, 3, 1); R(gr, x - 7, ty + 2); R(gr, x + 7, ty + 2);
     }
+  });
+  // luces de ranchos (dos capas que titilan en contrafase)
+  for (let f = 0; f < 2; f++) {
+    mk('lt' + f, 512, 96, () => {
+      for (let i = 0; i < 130; i++) {
+        const x = sr() * 512 | 0, y0 = (HF(x) | 0) + 2;
+        R(['#ffe08a', '#fff', '#ffb347'][sr() * 3 | 0], x, y0 + (sr() * (94 - y0) | 0));
+      }
+    });
+  }
+  // postes de luz con cableado colgando
+  mk('lp', 256, 64, () => {
+    for (let x = 0; x < 256; x++) {
+      const u = ((x - 21 + 256) % 256) / 256;
+      R('#1a1a1a', x, (12 + 13 * Math.sin(Math.PI * u)) | 0);
+      R('#1a1a1a', x, (16 + 10 * Math.sin(Math.PI * u)) | 0);
+    }
+    for (let k = 0; k < 9; k++) R('#1a1a1a', 150 + (k > 5 ? k - 5 : 0), 26 + k); // cable suelto
+    R('#5c5f66', 20, 10, 2, 54); R('#44474d', 19, 58, 4, 6);
+    R('#5c5f66', 20, 10, 12, 2); R('#ddd', 30, 12, 6, 2); R('#fff3b0', 31, 14, 4, 1);
+    for (let y = 15; y < 22; y++) R(`rgba(255,230,140,${0.25 - (y - 15) * 0.03})`, 30 - (y - 15), y, 6 + 2 * (y - 15), 1);
   });
   // fachadas: tiendas con rejas, mural de Cruz-Diez y mural tricolor
   mk('wl', 1024, 26, () => {
@@ -448,21 +537,48 @@ function textures() {
       x += w;
     }
   });
-  mk('rd', 64, 80, () => {
-    R('#3b3b42', 0, 0, 64, 80);
-    for (let i = 0; i < 160; i++) R(sr() < 0.5 ? '#45454d' : '#323238', sr() * 64 | 0, sr() * 80 | 0);
-    R('#2a2a30', 0, 0, 64, 1);
-    R('#d9d4c5', 0, 1, 64, 1);
-    R('#d9d4c5', 0, 77, 64, 1);
-    for (const y of [26, 52]) { R('#e9e9e9', 0, y, 18, 1); R('#e9e9e9', 32, y, 18, 1); }
+  mk('rd', 128, 80, () => {
+    R('#3b3b42', 0, 0, 128, 80);
+    for (let i = 0; i < 900; i++) R(['#45454d', '#34343b', '#4c4c55', '#2f2f35'][sr() * 4 | 0], sr() * 128 | 0, sr() * 80 | 0);
+    // parches de asfalto
+    for (let i = 0; i < 2; i++) {
+      const x = sr() * 100 | 0, y = 4 + (sr() * 64 | 0), w = 8 + (sr() * 10 | 0), hh = 4 + (sr() * 4 | 0);
+      R('#35353c', x - 1, y - 1, w + 2, hh + 2); R('#404048', x, y, w, hh);
+      for (let k = 0; k < 12; k++) R('#4a4a52', x + (sr() * w | 0), y + (sr() * hh | 0));
+    }
+    // manchas de aceite y marcas de neumáticos
+    for (let i = 0; i < 5; i++) { const x = sr() * 120 | 0, y = 6 + (sr() * 70 | 0); ci('#2a2a30', x, y, 1 + (sr() * 2 | 0)); R('#26262c', x - 2, y, 5, 1); }
+    for (const y of [20, 24, 46, 50, 72]) { const x = sr() * 90 | 0; R('#323238', x, y, 25 + (sr() * 30 | 0), 1); }
+    // grietas
+    for (let i = 0; i < 6; i++) { let x = sr() * 128 | 0, y = sr() * 78 | 0; for (let k = 0; k < 9; k++) { R('#28282e', x, y); x++; y += (sr() * 3 | 0) - 1; } }
+    R('#2a2a30', 0, 0, 128, 1);
+    // bordes y líneas de carril gastadas
+    for (let x = 0; x < 128; x++) {
+      for (const y of [1, 77]) if (sr() > 0.08) R(sr() < 0.2 ? '#a9a497' : '#d9d4c5', x, y);
+      for (const y of [26, 52]) if (x % 32 < 18 && sr() > 0.1) R(sr() < 0.25 ? '#b8b8b8' : '#e9e9e9', x, y - (sr() < 0.08));
+    }
   });
-  mk('wk', 32, 26, () => {
-    R('#b9b2a3', 0, 0, 32, 26);
-    R(Y, 0, 0, 16, 3); R('#222', 16, 0, 16, 3);
-    R('#6b665c', 0, 3, 32, 1);
-    for (const y of [11, 18]) R('#a39c8f', 0, y, 32, 1);
-    R('#a39c8f', 0, 4, 1, 22); R('#a39c8f', 16, 4, 1, 22);
-    for (let i = 0; i < 12; i++) R('#aaa293', sr() * 32 | 0, 5 + (sr() * 20 | 0));
+  // estela de velocidad detrás de cada raya
+  mk('spd', 128, 80, () => {
+    for (let x = 0; x < 128; x += 32) for (const y of [26, 52]) for (let k = 0; k < 14; k++) R(`rgba(233,233,233,${0.55 - k * 0.04})`, x + 18 + k, y);
+    for (let i = 0; i < 10; i++) { const x = sr() * 100 | 0, y = 4 + (sr() * 72 | 0); for (let k = 0; k < 20; k++) R(`rgba(255,255,255,${0.18 - k * 0.009})`, x + k, y); }
+  });
+  mk('wk', 128, 26, () => {
+    R('#b9b2a3', 0, 0, 128, 26);
+    for (let x = 0; x < 128; x += 16) R(x % 32 ? '#222' : '#ffd400', x, 0, 16, 3);
+    R('#6b665c', 0, 3, 128, 1);
+    for (const y of [11, 18]) R('#a39c8f', 0, y, 128, 1);
+    for (let x = 0; x < 128; x += 16) R('#a39c8f', x, 4, 1, 22);
+    for (let i = 0; i < 40; i++) R(sr() < 0.5 ? '#aaa293' : '#8f887a', sr() * 128 | 0, 5 + (sr() * 20 | 0));
+    // tapa de registro
+    ci('#6b6b6b', 40, 15, 4); ci('#555', 40, 15, 3); R('#6b6b6b', 37, 15, 7, 1); R('#6b6b6b', 40, 12, 1, 7);
+    // alcantarilla en el brocal
+    R('#1a1a1a', 88, 0, 12, 4); for (let k = 89; k < 100; k += 2) R('#555', k, 0, 1, 4);
+    // basura: periódico y lata
+    R('#e8e4d8', 66, 20, 4, 3); R('#aaa', 67, 21, 2, 1);
+    R('#d62828', 110, 9, 3, 2); R('#ccc', 113, 9, 1, 2);
+    // grieta
+    for (let k = 0; k < 7; k++) R('#8a8375', 18 + k, 6 + (k >> 1));
   });
 }
 
@@ -573,13 +689,23 @@ function create() {
     AC = null;
   }
 
+  const tl = (y, hh, k, d) => S.add.tileSprite(0, y, W, hh, k).setOrigin(0).setDepth(d);
   S.add.image(0, 0, 'sk').setOrigin(0).setDepth(0);
-  L.cl = S.add.tileSprite(0, 36, W, 40, 'cl').setOrigin(0).setDepth(1);
-  L.av = S.add.tileSprite(0, 66, W, 110, 'av').setOrigin(0).setDepth(2);
-  L.ct = S.add.tileSprite(0, 80, W, 96, 'ct').setOrigin(0).setDepth(4);
-  L.wl = S.add.tileSprite(0, 156, W, 26, 'wl').setOrigin(0).setDepth(5);
-  L.rd = S.add.tileSprite(0, 182, W, 80, 'rd').setOrigin(0).setDepth(6);
-  L.wk = S.add.tileSprite(0, 262, W, 26, 'wk').setOrigin(0).setDepth(6);
+  L.s0 = S.add.image(0, 0, 'sa0').setOrigin(0).setDepth(0.1);
+  L.s1 = S.add.image(0, 0, 'sa1').setOrigin(0).setDepth(0.1);
+  L.fa = tl(52, 70, 'fa', 0.5).setAlpha(0.55);
+  L.cl = tl(36, 40, 'cl', 1);
+  L.fb = tl(62, 70, 'fb', 1.5).setAlpha(0.8);
+  L.av = tl(66, 110, 'av', 2);
+  L.al = tl(66, 110, 'avl', 2.1);
+  L.ct = tl(80, 96, 'ct', 4);
+  L.l0 = tl(80, 96, 'lt0', 4.1);
+  L.l1 = tl(80, 96, 'lt1', 4.1);
+  L.wl = tl(156, 26, 'wl', 5);
+  L.lp = tl(118, 64, 'lp', 5.5);
+  L.rd = tl(182, 80, 'rd', 6);
+  L.sp = tl(182, 80, 'spd', 6.1);
+  L.wk = tl(262, 26, 'wk', 6);
   S.add.rectangle(0, 288, W, 12, 0x15151c).setOrigin(0).setDepth(400);
 
   bsh = S.add.image(0, 0, 'sh').setOrigin(0.5, 1).setScale(3.2, 1.2).setAlpha(0.35);
@@ -1183,10 +1309,20 @@ function hudUpd() {
 
 function render(dt, t) {
   const cx = Math.round(camX);
-  L.rd.tilePositionX = L.wk.tilePositionX = L.wl.tilePositionX = cx;
-  L.ct.tilePositionX = Math.round(cx * 0.35);
-  L.av.tilePositionX = Math.round(cx * 0.12);
+  L.rd.tilePositionX = L.wk.tilePositionX = L.wl.tilePositionX = L.lp.tilePositionX = L.sp.tilePositionX = cx;
+  L.ct.tilePositionX = L.l0.tilePositionX = L.l1.tilePositionX = Math.round(cx * 0.35);
+  L.av.tilePositionX = L.al.tilePositionX = Math.round(cx * 0.12);
+  L.fb.tilePositionX = Math.round(cx * 0.07);
+  L.fa.tilePositionX = Math.round(cx * 0.03);
   L.cl.tilePositionX = Math.round(cx * 0.05 + t * 0.004);
+  // titileo de estrellas, luces de ranchos y luz de la antena
+  const tw = Math.sin(t / 380) * 0.5 + 0.5, tw2 = Math.sin(t / 230 + 1) * 0.5 + 0.5;
+  L.s0.alpha = 0.3 + 0.7 * tw;
+  L.s1.alpha = 1 - 0.7 * tw;
+  L.l0.alpha = 0.35 + 0.65 * tw2;
+  L.l1.alpha = 1 - 0.65 * tw2;
+  L.al.alpha = (t / 700 | 0) % 2;
+  L.sp.alpha = Math.min(1, Math.max(0, ((G.ph == 'title' ? 90 : Math.abs(G.v)) - 40) / 180));
 
   const moving = Math.abs(G.ph == 'title' ? 90 : G.v) > 10;
   const by = Math.round(G.by + G.jy);

@@ -71,6 +71,11 @@ const THANKS = ['¡GRACIAS, MI PANA!', '¡CHEVERE, CHOFER!', '¡FINO!', '¡DIOS 
 const HURRY = ['¡CHAMO, APURATE!', '¡QUE LADILLA!', '¡VOY TARDE!', '¡DALE, CHOFER!', '¡MUEVE ESE PEROL!'];
 const CRASH = ['¡EPA, CHOFER!', '¡MOSCA, PANA!', '¡AY, MI MADRE!', '¡QUE VAINA!'];
 const TIPS = ['FRENA EN EL CUADRO AMARILLO DEL CARRIL DERECHO', 'LLEVA A CADA PASAJERO A SU PARADA', 'SI TE PASAS, ECHA PA\'TRAS CON LA PALANCA', 'CUIDADO CON LOS BACHES: PASA DESPACIO', 'EN LA ALCABALA: MAXIMO 40 KM/H', 'LA CORNETA APARTA A LOS CARROS', 'LAS AREPAS DAN TIEMPO, EL CAFE DA TURBO'];
+const DIM = 0x8d8da6;
+const SOFT = 0xbbbbcc;
+const GOLD = 0xffd400;
+const GREEN = 0x8ac926;
+const LINE = 0x3a3a55;
 const PC = [0xff595e, 0xffca3a, 0x8ac926, 0x4cc9f0, 0xc77dff, 0xff8fd8, 0xf4a261, 0xffffff];
 const VT = [['c0', 20], ['c1', 20], ['c2', 20], ['c3', 20], ['c4', 20], ['c5', 20], ['pp', 24], ['jp', 19], ['mo', 11], ['mo', 11], ['tr', 32]];
 
@@ -562,45 +567,73 @@ function create() {
   wa = S.add.image(0, 0, 'w0');
   wb = S.add.image(0, 0, 'w0');
 
-  // HUD
-  S.add.rectangle(0, 0, W, 30, 0x000000, 0.65).setOrigin(0).setDepth(499);
-  T(4, 2, 'TIEMPO', 1, 0xffd400); h.t = T(4, 11, '60', 2);
-  T(46, 2, 'BOLIVARES', 1, 0xffd400); h.b = T(46, 11, '0', 2);
-  T(118, 2, 'COMBO', 1, 0xffd400); h.c = T(118, 11, 'x1', 2);
-  T(160, 2, 'KM/H', 1, 0xffd400); h.k = T(160, 11, '0', 2);
-  T(206, 2, 'PASAJEROS', 1, 0xffd400);
-  T(300, 2, 'TURBO', 1, 0xffd400);
-  T(346, 2, 'NIVEL', 1, 0xffd400); h.l = T(346, 11, '1', 2);
-  h.cf = [0, 1, 2].map((i) => S.add.image(300 + i * 11, 13, 'cf').setOrigin(0).setDepth(501));
-  h.i = T(4, 33, '', 1, 0xffffff, 0, 498);
-  h.w = T(W / 2, 48, '¡ALCABALA! MAXIMO 40 KM/H', 1, 0xff595e, 0.5, 498).setVisible(0);
-  hg = S.add.graphics().setDepth(502);
+  // HUD: etiquetas atenuadas, valores clave grandes, lo secundario más pequeño
+  const hc = (h.hud = S.add.container(0, 0).setDepth(499));
+  const lb = (x, t) => hc.add(T(x, 2, t, 1, DIM));
+  hc.add([S.add.rectangle(0, 0, W, 28, 0x0b0b14, 0.82).setOrigin(0), S.add.rectangle(0, 28, W, 1, LINE).setOrigin(0)]);
+  for (const x of [44, 140, 244]) hc.add(S.add.rectangle(x, 4, 1, 20, LINE).setOrigin(0));
+  lb(6, 'TIEMPO');
+  hc.add((h.t = T(6, 10, '60', 2)));
+  lb(52, 'BOLIVARES');
+  hc.add((h.b = T(52, 10, '0', 2, GOLD)));
+  hc.add((h.c = T(0, 15, 'x1', 1, GREEN)));
+  lb(148, 'PASAJEROS');
+  lb(252, 'TURBO');
+  h.cf = [0, 1, 2].map((i) => S.add.image(252 + i * 11, 13, 'cf').setOrigin(0));
+  hc.add(h.cf);
+  lb(298, 'KM/H');
+  hc.add((h.k = T(298, 10, '0', 2, SOFT)));
+  // destino: píldora oscura con el chip de color del pasajero
+  hc.add((h.ib = S.add.rectangle(4, 31, 10, 13, 0x0b0b14, 0.88).setOrigin(0).setStrokeStyle(1, LINE)));
+  hc.add((h.i = T(18, 33, '', 1, 0xffffff)));
+  hc.add((h.id = T(0, 33, '', 1, GOLD)));
+  hc.add((hg = S.add.graphics()));
+  // alcabala: banda roja
+  h.w = S.add.container(0, 0);
+  h.w.add([S.add.rectangle(W / 2, 56, 170, 15, 0xb00020, 0.92).setStrokeStyle(1, 0xffffff), T(W / 2, 52, '¡ALCABALA! MAX 40 KM/H', 1, 0xffffff, 0.5)]);
+  hc.add(h.w);
 
-  // título
+  // título: logo → START → paneles informativos
   const tc = (h.title = S.add.container(0, 0).setDepth(700));
   const ts = "¡PASA PA' ATRÁS!";
-  tc.add(S.add.rectangle(W / 2, 118, 384, 168, 0x000000, 0.6));
-  tc.add([T(202, 44, ts, 3, 0xe63946, 0.5), T(201, 43, ts, 3, 0x1f4fbf, 0.5), T(200, 42, ts, 3, 0xffd400, 0.5)]);
-  tc.add(T(W / 2, 74, 'EL ENCAVA MAS ARRECHO DE CARACAS', 1, 0xffffff, 0.5));
-  tc.add(T(W / 2, 90, 'MEJORES CHOFERES', 1, 0x8ac926, 0.5));
-  tc.add((h.rk = T(W / 2, 101, '', 1, 0xffffff, 0.5).setCenterAlign()));
-  tc.add((h.ps = T(W / 2, 158, 'PRESIONA START', 2, 0xffd400, 0.5)));
-  tc.add((h.tip = T(W / 2, 178, TIPS[0], 1, 0x4cc9f0, 0.5)));
-  tc.add(T(W / 2, 191, 'PALANCA: MANEJA   B1: CORNETA   B2: TURBO', 1, 0xaaaaaa, 0.5));
-  S.tweens.add({ targets: h.ps, alpha: 0.2, duration: 450, yoyo: true, repeat: -1 });
+  tc.add(S.add.rectangle(W / 2, 37, 392, 62, 0x000000, 0.6));
+  tc.add([T(202, 14, ts, 3, 0xe63946, 0.5), T(201, 13, ts, 3, 0x1f4fbf, 0.5), T(200, 12, ts, 3, GOLD, 0.5)]);
+  tc.add(T(W / 2, 50, 'EL ENCAVA MAS ARRECHO DE CARACAS', 1, 0xdddddd, 0.5));
+  tc.add(S.add.rectangle(W / 2, 92, 196, 24, 0x000000, 0.7).setStrokeStyle(1, GOLD));
+  tc.add((h.ps = T(W / 2, 84, 'PRESIONA START', 2, GOLD, 0.5)));
+  tc.add(S.add.rectangle(W / 2, 145, 392, 62, 0x0b0b14, 0.82));
+  tc.add(S.add.rectangle(W / 2, 120, 1, 52, LINE).setOrigin(0.5, 0));
+  tc.add([T(12, 118, 'CONTROLES', 1, GREEN), T(212, 118, 'MEJORES CHOFERES', 1, GREEN)]);
+  [['DERECHA', 'ACELERAR'], ['IZQUIERDA', 'FRENAR / RETRO'], ['ARRIBA/ABAJO', 'CAMBIAR CARRIL'], ['B1 / B2', 'CORNETA / TURBO']].forEach(([k, a], i) =>
+    tc.add([T(12, 131 + i * 10, k, 1, GOLD), T(96, 131 + i * 10, a, 1, 0xffffff)]),
+  );
+  tc.add((h.rk = T(212, 131, '', 1, 0xffffff)));
+  tc.add((h.rs = T(388, 131, '', 1, GOLD, 1).setRightAlign()));
+  tc.add(S.add.rectangle(W / 2, 189, 392, 13, 0x000000, 0.6));
+  tc.add((h.tip = T(W / 2, 185, TIPS[0], 1, 0x4cc9f0, 0.5)));
+  S.tweens.add({ targets: h.ps, alpha: 0.25, duration: 450, yoyo: true, repeat: -1 });
 
   // pausa
   h.pause = S.add.container(0, 0).setDepth(700).setVisible(0);
-  h.pause.add([S.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.6), T(W / 2, 120, 'PAUSA', 3, 0xffd400, 0.5), T(W / 2, 160, 'START PARA SEGUIR', 1, 0xffffff, 0.5)]);
+  h.pause.add([S.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.6), T(W / 2, 120, 'PAUSA', 3, GOLD, 0.5), T(W / 2, 160, 'START PARA SEGUIR', 1, DIM, 0.5)]);
 
-  // fin de partida
-  h.ov = S.add.container(0, 0).setDepth(700).setVisible(0);
-  h.ov.add(S.add.rectangle(W / 2, H / 2, W, H, 0x0b0b12, 0.85));
-  h.ov.add(T(W / 2, 24, '¡SE ACABO EL PASAJE!', 2, 0xffd400, 0.5));
-  h.ov.add((h.st = T(W / 2, 54, '', 1, 0xffffff, 0.5).setCenterAlign()));
-  h.ov.add((h.nl = T(W / 2, 112, '', 1, 0x8ac926, 0.5).setCenterAlign()));
-  h.ov.add((h.nm = T(W / 2, 128, '', 3, 0xffffff, 0.5)));
-  h.ov.add((h.ot = T(W / 2, 166, '', 1, 0xffffff, 0.5).setCenterAlign()));
+  // fin de partida: puntaje protagonista, estadísticas secundarias, nombre
+  const o = (h.ov = S.add.container(0, 0).setDepth(700).setVisible(0));
+  o.add(S.add.rectangle(W / 2, H / 2, W, H, 0x0b0b12, 0.88));
+  o.add(T(W / 2, 14, '¡SE ACABO EL PASAJE!', 2, GOLD, 0.5));
+  o.add(T(W / 2, 40, 'BOLIVARES GANADOS', 1, DIM, 0.5));
+  o.add((h.sb = T(W / 2, 50, '0', 3, GOLD, 0.5)));
+  h.sv = ['PASAJEROS', 'DISTANCIA', 'COMBO MAX'].map((l, i) => T(80 + i * 120, 98, '', 1, 0xffffff, 0.5));
+  ['PASAJEROS', 'DISTANCIA', 'COMBO MAX'].forEach((l, i) => o.add(T(80 + i * 120, 88, l, 1, DIM, 0.5)));
+  o.add(h.sv);
+  o.add(S.add.rectangle(W / 2, 114, 300, 1, LINE));
+  o.add((h.nl = T(W / 2, 122, '', 1, GREEN, 0.5)));
+  h.L = [0, 1, 2].map((i) => T(170 + i * 30, 142, 'A', 3, 0xffffff, 0.5));
+  o.add(h.L);
+  o.add((h.ng = S.add.graphics()));
+  o.add((h.or = T(150, 138, '', 1, 0xffffff)));
+  o.add((h.os = T(250, 138, '', 1, GOLD, 1).setRightAlign()));
+  o.add((h.ot = T(W / 2, 196, '', 1, DIM, 0.5)));
 
   getStore()
     .get(KEY)
@@ -645,6 +678,7 @@ function toTitle() {
   reset();
   G.ph = 'title';
   h.ov.setVisible(0);
+  h.hud.setVisible(0);
   h.title.setVisible(1);
   rankText();
 }
@@ -654,12 +688,14 @@ function startGame() {
   sfx('sel');
   G.ph = 'play';
   h.title.setVisible(0);
+  h.hud.setVisible(1);
   pop(W / 2, 58, 'FRENA EN EL CUADRO AMARILLO', 0xffd400);
   pop(W / 2, 70, 'PARA RECOGER PASAJEROS', 0xffd400);
 }
 
 function rankText() {
-  h.rk.setText(G.rank.length ? G.rank.map((r, i) => `${i + 1}. ${r.n}  ${String(r.s).padStart(5, ' ')} BS`).join('\n') : 'SE BUSCA CHOFER');
+  h.rk.setText(G.rank.length ? G.rank.map((r, i) => `${i + 1}. ${r.n}`).join('\n') : 'SE BUSCA CHOFER\n\n¡SE EL PRIMERO!');
+  h.rs.setText(G.rank.map((r) => r.s + ' BS').join('\n'));
 }
 
 // ---------------------------------------------------------------- juego
@@ -1059,26 +1095,33 @@ function passengers(dt) {
 function hudUpd() {
   h.t.setText(Math.ceil(G.t)).setTint(G.t < 10 && (G.time / 200 | 0) % 2 ? 0xff595e : 0xffffff);
   h.b.setText(G.bs);
-  h.c.setText('x' + mult()).setTint(mult() > 1 ? 0xffd400 : 0xffffff);
-  h.k.setText(Math.abs(G.v * 0.4) | 0).setTint(G.warn && G.v * 0.4 > 40 ? 0xff595e : 0xffffff);
-  h.l.setText(G.lv + 1);
+  h.c.setText('x' + mult()).setVisible(mult() > 1).x = h.b.x + h.b.width + 3;
+  h.k.setText(Math.abs(G.v * 0.4) | 0).setTint(G.warn && G.v * 0.4 > 40 ? 0xff595e : SOFT);
   h.cf.forEach((c, i) => c.setAlpha(i < G.cafe ? 1 : 0.2));
-  h.w.setVisible(G.warn && (G.time / 250 | 0) % 2);
+  h.w.setVisible(G.warn && (G.time / 300 | 0) % 3 > 0);
 
-  let best = null, bd = 1e9;
+  // próxima bajada (o próxima parada con gente esperando)
+  let best = null, bd = 1e9, chip = 0, txt = '';
   for (const p of G.pax) {
     const d = stopX(p.d) - G.wx - 35;
     if (d > -200 && d < bd) { bd = d; best = p; }
   }
-  if (best) h.i.setText('BAJAN EN ' + NM(best.d) + ': ' + Math.max(0, bd / 9 | 0) + 'M').setTint(best.col);
+  if (best) { chip = best.col; txt = 'BAJA EN ' + NM(best.d); }
   else {
     const e = ents.find((e) => e.k == 'stop' && e.wait.length && e.wx > G.wx);
-    h.i.setText(e ? 'PASAJEROS EN ' + NM(e.i) + ': ' + Math.max(0, (e.wx - G.wx - 35) / 9 | 0) + 'M' : '').setTint(0xffffff);
+    if (e) { chip = 0xffffff; bd = e.wx - G.wx - 35; txt = 'RECOGE EN ' + NM(e.i); }
   }
+  const near = txt && Math.abs(bd) < 60;
+  h.i.setText(txt);
+  h.id.setText(!txt ? '' : near ? '¡FRENA AQUI!' : Math.max(0, bd / 9 | 0) + ' M').setTint(near ? GREEN : GOLD);
+  h.id.x = h.i.x + h.i.width + 6;
+  h.id.setVisible(!near || (G.time / 200 | 0) % 2);
+  h.ib.setVisible(!!txt).setSize(h.id.x + h.id.width, 13);
 
   hg.clear();
+  if (txt) hg.fillStyle(chip).fillRect(8, 34, 7, 7);
   for (let i = 0; i < 8; i++) {
-    const x = 206 + i * 11;
+    const x = 148 + i * 11;
     const p = G.pax[i];
     hg.fillStyle(i < 6 ? 0x2a2a35 : 0x4a1a1a).fillRect(x, 11, 10, 12);
     if (p) {
@@ -1148,16 +1191,25 @@ function gameOver() {
   G.np = 0;
   sfx('over');
   h.ov.setVisible(1);
-  h.st.setText(
-    `BOLIVARES: ${G.bs}\nPASAJEROS LLEVADOS: ${G.deliv}\nDISTANCIA: ${(G.wx / 9000).toFixed(1)} KM\nCOMBO MAXIMO: ${G.maxc}`,
-  );
+  h.hud.setVisible(0);
+  h.sb.setText(G.bs);
+  [G.deliv, (G.wx / 9000).toFixed(1) + ' KM', 'x' + G.maxc].forEach((v, i) => h.sv[i].setText(v));
   h.nl.setText('ESCRIBE TU NOMBRE, CHOFER');
-  h.ot.setText('ARRIBA/ABAJO: LETRA   B1: SIGUIENTE');
+  h.ot.setText('ARRIBA/ABAJO: LETRA     B1: SIGUIENTE');
+  h.or.setText('');
+  h.os.setText('');
   nameText();
 }
 
+const AZ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 function nameText() {
-  h.nm.setText(G.nm.map((c, i) => (i == G.np && (G.time / 250 | 0) % 2 ? '_' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[c])).join(' '));
+  const g = h.ng.clear();
+  h.L.forEach((t, i) => {
+    const on = i == G.np;
+    t.setText(AZ[G.nm[i]]).setTint(on ? GOLD : 0xffffff).setVisible(1);
+    g.fillStyle(on ? GOLD : LINE).fillRect(t.x - 10, 170, 20, 2);
+    if (on) g.fillTriangle(t.x - 4, 138, t.x + 4, 138, t.x, 134).fillTriangle(t.x - 4, 175, t.x + 4, 175, t.x, 179);
+  });
 }
 
 function nameEntry() {
@@ -1176,13 +1228,16 @@ function nameEntry() {
 }
 
 function saveScore() {
-  const n = G.nm.map((c) => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[c]).join('');
+  const n = G.nm.map((c) => AZ[c]).join('');
   G.rank = G.rank.concat({ n, s: G.bs, d: G.deliv }).sort((a, b) => b.s - a.s).slice(0, 5);
   G.ph = 'rank';
   G.lock = G.time + 600;
-  h.nm.setText(n);
+  h.L.forEach((t) => t.setVisible(0));
+  h.ng.clear();
   h.nl.setText('MEJORES CHOFERES');
-  h.ot.setText(G.rank.map((r, i) => `${i + 1}. ${r.n}  ${String(r.s).padStart(5, ' ')} BS`).join('\n') + '\n\nSTART PARA VOLVER');
+  h.or.setText(G.rank.map((r, i) => `${i + 1}. ${r.n}`).join('\n'));
+  h.os.setText(G.rank.map((r) => r.s + ' BS').join('\n'));
+  h.ot.setText('START PARA VOLVER');
   rankText();
   getStore().set(KEY, G.rank).catch(() => {});
 }

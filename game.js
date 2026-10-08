@@ -6,6 +6,7 @@ const W = 400;
 const H = 300;
 const LY = [205, 231, 257]; // línea del suelo de cada carril (0 = izquierdo, 2 = junto a la acera)
 const KEY = 'pasa-pa-atras-v1';
+const DOOR = 11; // centro de la puerta respecto al centro del bus
 const DOCK = 40; // tolerancia (px) entre la puerta y el centro de la parada, hacia adelante o atrás
 
 // DO NOT replace existing keys — they match the physical arcade cabinet wiring.
@@ -77,6 +78,7 @@ const SOFT = 0xbbbbcc;
 const GOLD = 0xffd400;
 const GREEN = 0x8ac926;
 const LINE = 0x3a3a55;
+const PODIO = [0xffd400, 0xd8dee9, 0xe08a4a]; // oro, plata, bronce
 const PC = [0xff595e, 0xffca3a, 0x8ac926, 0x4cc9f0, 0xc77dff, 0xff8fd8, 0xf4a261, 0xffffff];
 const VT = [['c0', 20], ['c1', 20], ['c2', 20], ['c3', 20], ['c4', 20], ['c5', 20], ['pp', 24], ['jp', 19], ['mo', 11], ['mo', 11], ['tr', 32]];
 
@@ -194,50 +196,61 @@ function textures() {
   });
   S.cache.bitmapFont.add('f', Phaser.GameObjects.RetroFont.Parse(S, { image: 'font', width: 7, height: 9, chars: FC, charsPerRow: 20 }));
 
-  // El Encava ENT-610, decorado a la venezolana
+  // El Encava ENT-610 "tuneado": blanco, vidrios negros, rayas fucsia y verde lima,
+  // trompa con parachoques fucsia, espejos "oreja", sirenas en el techo y rines cromados
   mk('bus', 104, 46, () => {
-    const cr = '#f4ecd6';
-    R(dk, 57, 0, 42, 10);
-    ptxt('PETARE', 60, 1, Y);
-    R(ch, 14, 7, 12, 2); R(ch, 24, 5, 3, 5); R(ch, 30, 7, 12, 2); R(ch, 40, 5, 3, 5);
-    R(cr, 3, 10, 94, 29);
-    R(cr, 97, 13, 3, 26);
-    R('#fffaf0', 4, 10, 92, 1);
-    for (const x of [6, 18, 30, 42, 54]) R('#ff9f1c', x, 9, 2, 1);
-    for (let i = 0; i < 6; i++) {
-      const x = 7 + i * 12;
-      R(gl, x, 13, 10, 10);
-      R(g2, x + 6, 15, 2, 1); R(g2, x + 5, 16, 2, 1); R(g2, x + 4, 17, 2, 1);
+    const wh = '#f6f6f2', gs = '#121218', gr = '#2a2f3d', pk = '#ff2d8a', lm = '#9be22d', rf = '#3a4660';
+    // techo: aire acondicionado y luces tipo sirena
+    R('#e2e2de', 38, 5, 20, 2);
+    for (const x of [24, 78]) { R('#555', x, 5, 5, 2); R('#8fdcff', x + 1, 3, 3, 2); R('#fff', x + 1, 3); }
+    // carrocería y cabina con parabrisas inclinado
+    R(wh, 2, 8, 84, 31);
+    R(wh, 3, 7, 82, 1);
+    for (let y = 8; y < 39; y++) {
+      const e = y < 24 ? 93 + ((y - 8) >> 2) : 102;
+      R(wh, 86, y, e - 85, 1);
+      if (y > 9 && y < 23) R(gs, 87, y, e - 89, 1);
     }
-    R(dk, 81, 12, 11, 27);
-    R(gl, 82, 13, 9, 11);
-    R(gl, 82, 26, 9, 11);
-    R(dk, 86, 13, 1, 24);
-    R(gl, 93, 12, 5, 12);
-    R(gl, 98, 15, 1, 9);
-    R(g2, 95, 16, 1, 3);
-    // flecos rojos y amarillos
-    for (let x = 7; x < 99; x++) if ((x < 79 && (x - 7) % 12 < 10) || (x > 81 && x < 91) || x > 92) R(x % 2 ? Rd : Y, x, 13, 1, 1 + (x % 3 == 0));
-    // franjas tricolor con las 8 estrellas
-    for (const [c, y] of [[Y, 25], [B, 28], [Rd, 31]]) { R(c, 3, y, 78, 3); R(c, 92, y, 8, 3); }
-    for (let i = 0; i < 8; i++) R('#fff', 24 + i * 5, 29 - (i > 1 && i < 6));
-    R(Rd, 2, 24, 2, 6);
-    R('#fff59d', 98, 26, 2, 3);
-    R('#ff9f1c', 98, 30, 2, 2);
-    R(ch, 0, 33, 4, 5);
-    R(ch, 97, 33, 6, 5);
-    R(dk, 100, 15, 3, 1); R(dk, 102, 15, 1, 5); R(dk, 101, 19, 3, 4);
-    R(dk, 3, 37, 94, 2);
-    ci('#111', 22, 40, 8);
-    ci('#111', 72, 40, 8);
+    R(gs, 84, 8, 9, 2); // visera negra
+    R(lm, 88, 11, 5, 1); R(pk, 89, 12, 4, 1); // calcomanía en el parabrisas
+    R('#d9d9d4', 94, 24, 8, 1);
+    // franja de ventanas polarizadas
+    R(gs, 4, 11, 82, 13);
+    for (const x of [16, 28, 40, 52, 72]) R(gr, x, 11, 1, 13);
+    for (let x = 6; x < 80; x += 12) { R(rf, x + 4, 12, 2, 1); R(rf, x + 3, 13, 2, 1); R(rf, x + 2, 14, 2, 1); }
+    R(lm, 3, 24, 83, 1);
+    // rayas en curva subiendo hacia atrás
+    for (let x = 3; x < 86; x++) {
+      for (let y = 25; y < 37; y++) {
+        const v = (((y - 0.3 * x) % 24) + 24) % 24;
+        if (v < 7) R(pk, x, y);
+        else if (v >= 8 && v < 10) R(lm, x, y);
+      }
+    }
+    // puerta de dos hojas, detrás de la rueda delantera
+    R(wh, 58, 24, 11, 15);
+    R('#bdbdb8', 58, 11, 1, 28); R('#bdbdb8', 68, 11, 1, 28); R(gr, 63, 11, 1, 27);
+    R(gs, 59, 26, 4, 10); R(gs, 64, 26, 4, 10);
+    // faldón, trompa y luces
+    R(pk, 2, 37, 92, 2);
+    R('#222', 2, 39, 90, 1);
+    for (let k = 0; k < 4; k++) R('#444', 101, 27 + k * 2, 2, 1);
+    R('#fff59d', 101, 35, 2, 2); R('#ff9f1c', 100, 35, 1, 2);
+    R(pk, 86, 38, 17, 2); R('#222', 94, 40, 10, 1);
+    R('#e63946', 2, 25, 2, 6); R(ch, 0, 34, 3, 4);
+    // espejo "oreja"
+    R(wh, 88, 5, 13, 2); R(wh, 100, 6, 2, 4); R(wh, 99, 10, 5, 9); R(gs, 99, 11, 1, 7);
+    ci('#111', 20, 40, 8);
+    ci('#111', 78, 40, 8);
   });
   for (let f = 0; f < 2; f++) {
     mk('w' + f, 13, 13, () => {
       ci('#151515', 6, 6, 6);
-      ci(ch, 6, 6, 3);
-      if (f) { R('#444', 4, 4); R('#444', 8, 8); R('#444', 8, 4); R('#444', 4, 8); }
-      else { R('#444', 6, 3, 1, 7); R('#444', 3, 6, 7, 1); }
-      R('#222', 6, 6);
+      ci('#e9ecf0', 6, 6, 4);
+      ci('#b8bcc4', 6, 6, 2);
+      if (f) { R('#8a9099', 4, 4); R('#8a9099', 8, 8); R('#8a9099', 8, 4); R('#8a9099', 4, 8); }
+      else { R('#8a9099', 6, 3, 1, 7); R('#8a9099', 3, 6, 7, 1); }
+      R('#fff', 4, 3); R('#555', 6, 6);
     });
   }
   mk('sh', 32, 6, () => { R('#000', 4, 0, 24, 6); R('#000', 0, 1, 32, 4); });
@@ -319,6 +332,12 @@ function textures() {
   mk('ar', 12, 9, () => { R('#d4a373', 1, 0, 10, 4); R('#d4a373', 0, 1, 12, 3); R('#8b5a2b', 3, 1); R('#8b5a2b', 7, 2); R('#8b5a2b', 9, 1); R('#fdfcdc', 0, 4, 12, 1); R('#f4978e', 1, 5, 10, 1); R('#d4a373', 0, 6, 12, 2); R('#d4a373', 1, 8, 10, 1); });
   mk('bl', 12, 7, () => { R('#2d6a4f', 0, 0, 12, 7); R('#95d5b2', 1, 1, 10, 5); R('#2d6a4f', 5, 2, 2, 3); R('#2d6a4f', 2, 2); R('#2d6a4f', 9, 4); });
   mk('cf', 9, 10, () => { R('#ddd', 2, 0, 1, 2); R('#ddd', 4, 1, 1, 2); R('#fff', 1, 3, 6, 7); R('#fff', 7, 4, 2, 1); R('#fff', 8, 5, 1, 2); R('#fff', 7, 7, 2, 1); R('#6f4e37', 2, 3, 4, 1); R('#caa', 1, 9, 6, 1); });
+
+  mk('tip', 7, 10, () => {
+    R(Y, 2, 0, 3, 1); R(Y, 1, 1, 5, 4); R(Y, 2, 5, 3, 1);
+    R('#fff', 2, 1, 1, 2);
+    R('#ccc', 2, 6, 3, 1); R('#888', 2, 7, 3, 1); R('#ccc', 2, 8, 3, 1); R('#888', 3, 9);
+  });
 
   // guacamayas
   for (let f = 0; f < 2; f++) {
@@ -608,10 +627,11 @@ function create() {
   [['DERECHA', 'ACELERAR'], ['IZQUIERDA', 'FRENAR / RETRO'], ['ARRIBA/ABAJO', 'CAMBIAR CARRIL'], ['B1 / B2', 'CORNETA / TURBO']].forEach(([k, a], i) =>
     tc.add([T(12, 131 + i * 10, k, 1, GOLD), T(96, 131 + i * 10, a, 1, 0xffffff)]),
   );
-  tc.add((h.rk = T(212, 131, '', 1, 0xffffff)));
-  tc.add((h.rs = T(388, 131, '', 1, GOLD, 1).setRightAlign()));
-  tc.add(S.add.rectangle(W / 2, 189, 392, 13, 0x000000, 0.6));
-  tc.add((h.tip = T(W / 2, 185, TIPS[0], 1, 0x4cc9f0, 0.5)));
+  h.rk = rows(tc, 212, 388, 131);
+  tc.add((h.tb = S.add.rectangle(W / 2, 190, 10, 15, 0x0b0b14, 0.85).setStrokeStyle(1, LINE)));
+  tc.add((h.tbi = S.add.image(0, 185, 'tip').setOrigin(0)));
+  tc.add((h.tip = T(W / 2 + 6, 186, '', 1, 0x4cc9f0, 0.5)));
+  setTip(TIPS[0]);
   S.tweens.add({ targets: h.ps, alpha: 0.25, duration: 450, yoyo: true, repeat: -1 });
 
   // pausa
@@ -632,8 +652,7 @@ function create() {
   h.L = [0, 1, 2].map((i) => T(170 + i * 30, 142, 'A', 3, 0xffffff, 0.5));
   o.add(h.L);
   o.add((h.ng = S.add.graphics()));
-  o.add((h.or = T(150, 138, '', 1, 0xffffff)));
-  o.add((h.os = T(250, 138, '', 1, GOLD, 1).setRightAlign()));
+  h.or = rows(o, 140, 260, 136);
   o.add((h.ot = T(W / 2, 196, '', 1, DIM, 0.5)));
 
   getStore()
@@ -654,7 +673,7 @@ function update(time, dms) {
   if (G.ph == 'play') play(dt);
   else if (G.ph == 'title') {
     G.wx += 90 * dt;
-    if ((G.tt -= dt) < 0) { G.tt = 3.5; h.tip.setText(TIPS[G.ti++ % TIPS.length]); }
+    if ((G.tt -= dt) < 0) { G.tt = 3.5; setTip(TIPS[G.ti++ % TIPS.length]); }
     if (pr('S') | pr('1')) startGame();
   } else if (G.ph == 'pause') {
     if (pr('S')) { G.ph = 'play'; h.pause.setVisible(0); S.tweens.resumeAll(); }
@@ -694,9 +713,31 @@ function startGame() {
   pop(W / 2, 70, 'PARA RECOGER PASAJEROS', 0xffd400);
 }
 
+// 5 filas de ranking (nombre a la izquierda, puntaje a la derecha) dentro de un container
+function rows(c, xl, xr, y) {
+  return [0, 1, 2, 3, 4].map((i) => {
+    const r = [T(xl, y + i * 9, ''), T(xr, y + i * 9, '', 1, 0xffffff, 1)];
+    c.add(r);
+    return r;
+  });
+}
+function fillRank(rs) {
+  rs.forEach(([n, v], i) => {
+    const r = G.rank[i];
+    const c = i < 3 ? PODIO[i] : SOFT;
+    n.setText(r ? `${i + 1}. ${r.n}` : '').setTint(c);
+    v.setText(r ? r.s + ' BS' : '').setTint(c);
+  });
+  if (!G.rank.length) rs[0][0].setText('SE BUSCA CHOFER').setTint(0xffffff), rs[2][0].setText('¡SE EL PRIMERO!').setTint(GOLD);
+}
 function rankText() {
-  h.rk.setText(G.rank.length ? G.rank.map((r, i) => `${i + 1}. ${r.n}`).join('\n') : 'SE BUSCA CHOFER\n\n¡SE EL PRIMERO!');
-  h.rs.setText(G.rank.map((r) => r.s + ' BS').join('\n'));
+  fillRank(h.rk);
+}
+function setTip(t) {
+  h.tip.setText(t);
+  const w = h.tip.width + 16;
+  h.tb.setSize(w + 8, 15);
+  h.tbi.x = W / 2 - w / 2 + 2;
 }
 
 // ---------------------------------------------------------------- juego
@@ -1010,7 +1051,7 @@ function crash(e) {
 }
 
 function stops(dt) {
-  const door = G.wx + 35;
+  const door = G.wx + DOOR;
   const inLane = lane(G.by) == 2 && Math.abs(G.by - LY[2]) < 3;
   let dock = null;
   for (const e of ents) {
@@ -1041,11 +1082,11 @@ function board(e) {
   const mx = (9 + hops * 6) * (1 - G.lv * 0.06);
   const col = PC[G.cc++ % 8];
   G.pax.push({ d: e.i + hops, hops, pat: mx, mx, col, v: p.v });
-  S.tweens.add({ targets: p, wx: G.wx + 35, duration: 220, onComplete: () => (p.dead = 1) });
+  S.tweens.add({ targets: p, wx: G.wx + DOOR, duration: 220, onComplete: () => (p.dead = 1) });
   sfx('board');
   if (G.pax.length > 6 || !e.said) say(G.pax.length > 6 ? "¡PA'TRAS, QUE CABE UNO MAS!" : pick(COLECTOR), 0xffffff);
   e.said = 1;
-  pop(G.bx + 35, G.by - 30 - (G.sy % 3) * 9, '¡A ' + NM(e.i + hops) + '!', col);
+  pop(G.bx + DOOR, G.by - 30 - (G.sy % 3) * 9, '¡A ' + NM(e.i + hops) + '!', col);
   G.sy++;
 }
 
@@ -1060,11 +1101,11 @@ function deliver(pi, e) {
   G.bs += tot;
   G.deliv++;
   G.t += tip ? 4 : 2;
-  pop(G.bx + 35, G.by - 34, '+' + tot + ' BS', 0x8ac926, 2);
-  pop(G.bx + 35, G.by - 14, tip ? '¡PROPINA! +4 SEG' : '+2 SEG', 0xffd400);
+  pop(G.bx + DOOR, G.by - 34, '+' + tot + ' BS', 0x8ac926, 2);
+  pop(G.bx + DOOR, G.by - 14, tip ? '¡PROPINA! +4 SEG' : '+2 SEG', 0xffd400);
   say(pick(THANKS), p.col);
   sfx('cash');
-  const q = { k: 'ped', wx: G.wx + 35, sp: [] };
+  const q = { k: 'ped', wx: G.wx + DOOR, sp: [] };
   add(q, 'p' + p.v + '0', 0, 283);
   ents.push(q);
   S.tweens.add({ targets: q, wx: e.wx - rnd(14, 34), duration: 500 });
@@ -1075,7 +1116,7 @@ function passengers(dt) {
   const k = G.pax.length > 6 ? 1.5 : 1; // apretados se impacientan más rápido
   for (let i = G.pax.length - 1; i >= 0; i--) {
     const p = G.pax[i];
-    const d = stopX(p.d) - (G.wx + 35);
+    const d = stopX(p.d) - (G.wx + DOOR);
     p.pat -= dt * k;
     if (!p.ann && d < 260 && d > 0) { p.ann = 1; say(pick(['¡LA PARADA, CHOFER!', '¡EN LA PROXIMA!', '¡ME QUEDO EN ' + NM(p.d) + '!']), p.col); }
     if (!p.pass && d < -DOCK - 15) { p.pass = 1; p.pat -= 3; say('¡SE PASO, CHOFER!', 0xff595e); }
@@ -1085,7 +1126,7 @@ function passengers(dt) {
       G.combo = 0;
       sfx('bad');
       say(pick(['¡ME BAJO AQUI!', '¡MEJOR ME VOY A PIE!']), 0xff595e);
-      const q = { k: 'ped', wx: G.wx + 35, sp: [] };
+      const q = { k: 'ped', wx: G.wx + DOOR, sp: [] };
       add(q, 'p' + p.v + '0', 0, 283);
       ents.push(q);
       S.tweens.add({ targets: q.sp[0].img, alpha: 0, delay: 700, duration: 400, onComplete: () => (q.dead = 1) });
@@ -1104,13 +1145,13 @@ function hudUpd() {
   // próxima bajada (o próxima parada con gente esperando)
   let best = null, bd = 1e9, chip = 0, txt = '';
   for (const p of G.pax) {
-    const d = stopX(p.d) - G.wx - 35;
+    const d = stopX(p.d) - G.wx - DOOR;
     if (d > -200 && d < bd) { bd = d; best = p; }
   }
   if (best) { chip = best.col; txt = 'BAJA EN ' + NM(best.d); }
   else {
     const e = ents.find((e) => e.k == 'stop' && e.wait.length && e.wx > G.wx);
-    if (e) { chip = 0xffffff; bd = e.wx - G.wx - 35; txt = 'RECOGE EN ' + NM(e.i); }
+    if (e) { chip = 0xffffff; bd = e.wx - G.wx - DOOR; txt = 'RECOGE EN ' + NM(e.i); }
   }
   const near = txt && Math.abs(bd) < DOCK;
   h.i.setText(txt);
@@ -1151,8 +1192,8 @@ function render(dt, t) {
   const by = Math.round(G.by + G.jy);
   bus.setPosition(G.bx, by - (moving && (t / 110 | 0) % 2 ? 1 : 0)).setDepth(10 + G.by).setVisible(G.inv <= 0 || (t / 70 | 0) % 2);
   const wt = 'w' + ((G.wx / 5) & 1);
-  wa.setPosition(G.bx - 30, by - 6).setTexture(wt).setDepth(10.1 + G.by).setVisible(bus.visible);
-  wb.setPosition(G.bx + 20, by - 6).setTexture(wt).setDepth(10.1 + G.by).setVisible(bus.visible);
+  wa.setPosition(G.bx - 32, by - 6).setTexture(wt).setDepth(10.1 + G.by).setVisible(bus.visible);
+  wb.setPosition(G.bx + 26, by - 6).setTexture(wt).setDepth(10.1 + G.by).setVisible(bus.visible);
   bsh.setPosition(G.bx, Math.round(G.by) + 2).setDepth(9.4 + G.by);
 
   for (let i = ents.length - 1; i >= 0; i--) {
@@ -1197,8 +1238,7 @@ function gameOver() {
   [G.deliv, (G.wx / 9000).toFixed(1) + ' KM', 'x' + G.maxc].forEach((v, i) => h.sv[i].setText(v));
   h.nl.setText('ESCRIBE TU NOMBRE, CHOFER');
   h.ot.setText('ARRIBA/ABAJO: LETRA     B1: SIGUIENTE');
-  h.or.setText('');
-  h.os.setText('');
+  h.or.forEach((r) => r.forEach((t) => t.setText('')));
   nameText();
 }
 
@@ -1236,8 +1276,7 @@ function saveScore() {
   h.L.forEach((t) => t.setVisible(0));
   h.ng.clear();
   h.nl.setText('MEJORES CHOFERES');
-  h.or.setText(G.rank.map((r, i) => `${i + 1}. ${r.n}`).join('\n'));
-  h.os.setText(G.rank.map((r) => r.s + ' BS').join('\n'));
+  fillRank(h.or);
   h.ot.setText('START PARA VOLVER');
   rankText();
   getStore().set(KEY, G.rank).catch(() => {});

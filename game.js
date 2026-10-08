@@ -6,6 +6,7 @@ const W = 400;
 const H = 300;
 const LY = [205, 231, 257]; // línea del suelo de cada carril (0 = izquierdo, 2 = junto a la acera)
 const KEY = 'pasa-pa-atras-v1';
+const DOCK = 40; // tolerancia (px) entre la puerta y el centro de la parada, hacia adelante o atrás
 
 // DO NOT replace existing keys — they match the physical arcade cabinet wiring.
 // To add local testing shortcuts, append extra keys to any array.
@@ -1014,7 +1015,7 @@ function stops(dt) {
   let dock = null;
   for (const e of ents) {
     if (e.k != 'stop') continue;
-    const near = Math.abs(e.wx - door) < 22;
+    const near = Math.abs(e.wx - door) < DOCK;
     const want = e.wait.length || G.pax.some((p) => p.d == e.i);
     e.tag.setTint(near && inLane ? 0x8ac926 : want ? 0xffd400 : 0x777777);
     const close = e.wx - G.wx < 260 && e.wx - G.wx > -40;
@@ -1077,7 +1078,7 @@ function passengers(dt) {
     const d = stopX(p.d) - (G.wx + 35);
     p.pat -= dt * k;
     if (!p.ann && d < 260 && d > 0) { p.ann = 1; say(pick(['¡LA PARADA, CHOFER!', '¡EN LA PROXIMA!', '¡ME QUEDO EN ' + NM(p.d) + '!']), p.col); }
-    if (!p.pass && d < -40) { p.pass = 1; p.pat -= 3; say('¡SE PASO, CHOFER!', 0xff595e); }
+    if (!p.pass && d < -DOCK - 15) { p.pass = 1; p.pat -= 3; say('¡SE PASO, CHOFER!', 0xff595e); }
     if (!p.imp && p.pat < p.mx * 0.3) { p.imp = 1; say(pick(HURRY), p.col); }
     if (p.pat <= 0) {
       G.pax.splice(i, 1);
@@ -1111,7 +1112,7 @@ function hudUpd() {
     const e = ents.find((e) => e.k == 'stop' && e.wait.length && e.wx > G.wx);
     if (e) { chip = 0xffffff; bd = e.wx - G.wx - 35; txt = 'RECOGE EN ' + NM(e.i); }
   }
-  const near = txt && Math.abs(bd) < 60;
+  const near = txt && Math.abs(bd) < DOCK;
   h.i.setText(txt);
   h.id.setText(!txt ? '' : near ? '¡FRENA AQUI!' : Math.max(0, bd / 9 | 0) + ' M').setTint(near ? GREEN : GOLD);
   h.id.x = h.i.x + h.i.width + 6;

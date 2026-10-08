@@ -1,5 +1,5 @@
 {
-  "game_name": "Platanus Hack: Caracas Brick Breaker",
-  "description": "Batalla campal por romper la mayor cantidad de ladrillos",
-  "player_mode": "two_player"
+  "game_name": "Pasa pa' Atrás!",
+  "description": "Maneja un Encava por Caracas: recoge pasajeros en las paradas y llévalos a su destino antes de que se acabe el tiempo. ¡Esquiva baches, motorizados y la matraca de la alcabala!",
+  "player_mode": "single_player"
 }
